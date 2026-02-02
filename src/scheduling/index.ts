@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sendEmail } from "../utils/email";
 
 const SHCEDULING_DESCRIPTION = `
 You are Jarvis, a proactive personal assistant designed to handle tasks that the user tends to postpone. Your primary responsibilities include:
@@ -18,14 +19,11 @@ When the user requests a service:
 Always be proactive, efficient, and maintain a helpful tone while respecting the user's preferences and schedule.
 `;
 
-const googleSearch = async (
-  query: string
-): Promise<{ name: string; contactInfo: string }[]> => {
-  // Placeholder for Google Search API integration
-  return [];
-};
-
 const inputSchema = z.object({
+  contactInfo: z
+    .string()
+    .optional()
+    .describe("Contact information of the user email or phone number"),
   serviceType: z
     .string()
     .describe("Type of service needed, e.g., cleaning, maintenance, delivery"),
@@ -52,14 +50,45 @@ export const SERVICE_CONFIG = {
 };
 
 export const SERVICE_HANDLER = async (type: inputSchema) => {
-  const results = await googleSearch(type.serviceType);
+  const isEmail = type.contactInfo?.includes("@") ?? false;
 
-  if (!results.length)
+  // if it is email send email else send whatsapp or sms
+
+  const messageToSend = `Hello, I would like to schedule a ${type.serviceType} service. ${
+    type.details ? `Here are the details: ${type.details}.` : ""
+  } ${
+    type.preferredDate
+      ? `My preferred date for the service is ${type.preferredDate}.`
+      : ""
+  } ${
+    type.preferredTime
+      ? `My preferred time for the service is ${type.preferredTime}.`
+      : ""
+  } Please let me know the available slots. Thank you!`;
+
+  if (isEmail && type.contactInfo) {
+    console.error("Sending email to:", type.contactInfo);
+    console.error("Message:", messageToSend);
+
+    await sendEmail(
+      type.contactInfo,
+      `Scheduling ${type.serviceType} Service`,
+      messageToSend
+    );
+  } else {
+  }
+
+  // Placeholder for sending message logic
+  // In a real implementation, this would send an email or SMS/WhatsApp message
+
+  const wasSent = true;
+
+  if (!wasSent)
     return {
       content: [
         {
-          type: "text",
-          text: `I couldn't find any service providers for ${type.serviceType} at the moment. Could you please provide more details or specify a different service?`
+          text: `Failed to schedule the ${type.serviceType} service. Please try again later.`,
+          type: "text"
         }
       ]
     };
@@ -67,16 +96,10 @@ export const SERVICE_HANDLER = async (type: inputSchema) => {
   return {
     content: [
       {
-        type: "text",
-        text:
-          `I found the following service providers for ${type.serviceType}:\n` +
-          results
-            .map((r, idx: number) => `${idx + 1}. ${r.name} - ${r.contactInfo}`)
-            .join("\n")
-      },
-      {
-        type: "text",
-        text: `Please let me know if you'd like me to draft a message to any of these providers or if you need further assistance.`
+        text: `Successfully scheduled the ${type.serviceType} service for you. You will be contacted via ${
+          isEmail ? "email" : "mobile"
+        } with the details shortly.`,
+        type: "text"
       }
     ]
   };

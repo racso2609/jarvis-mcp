@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "npx dotenv -e .env pnpx ts-node src/index.ts",
+    "dev": "pnpx ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,8 +15,11 @@
   "packageManager": "pnpm@10.15.0",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.3",
+    "@types/nodemailer": "^7.0.9",
+    "apify-client": "^2.22.0",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "nodemailer": "^7.0.13",
     "zod": "^3.25.76"
   },
   "devDependencies": {
